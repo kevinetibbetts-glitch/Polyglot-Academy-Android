@@ -1,0 +1,71 @@
+name: Build Polyglot Academy APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'Polyglot_Academy_Android_5_4_Build_Ready.zip'
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Extract complete Android project
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s Polyglot_Academy_Android_5_4_Build_Ready.zip
+          unzip -tq Polyglot_Academy_Android_5_4_Build_Ready.zip
+          mkdir -p source-project
+          unzip -q Polyglot_Academy_Android_5_4_Build_Ready.zip -d source-project
+          cp -a source-project/app .
+          cp source-project/settings.gradle source-project/build.gradle source-project/gradle.properties .
+          test -s app/src/main/assets/index.html
+          test -s app/src/main/java/com/polyglot/speakingacademy/MainActivity.java
+          test -s app/src/main/AndroidManifest.xml
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Android build tools
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android API 35
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Compile Android APK
+        run: gradle --no-daemon --console=plain assembleDebug
+
+      - name: Verify APK exists
+        shell: bash
+        run: |
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk PolyglotAcademy.apk
+          ls -lh PolyglotAcademy.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PolyglotAcademy-Android-APK
+          path: PolyglotAcademy.apk
+          if-no-files-found: error
+          retention-days: 30
