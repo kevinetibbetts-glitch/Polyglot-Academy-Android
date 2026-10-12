@@ -58,6 +58,9 @@ jobs:
       - name: Apply Android 5.6 voice repair
         run: python3 scripts/apply_audio_56.py
 
+      - name: Validate Java audio search expression
+        run: python3 scripts/repair_search_java_56.py
+
       - name: Verify phone audio repair assets
         shell: bash
         run: |
