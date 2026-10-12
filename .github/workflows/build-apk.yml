@@ -72,7 +72,7 @@ jobs:
         run: |
           grep -q 'id="voiceRecStart"' app/src/main/assets/index.html
           grep -q 'id="recStart"' app/src/main/assets/index.html
-          grep -q "versionCode 55" app/build.gradle
+          grep -q "versionCode 56" app/build.gradle
 
       - name: Set up Java
         uses: actions/setup-java@v4
