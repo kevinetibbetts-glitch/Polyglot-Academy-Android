@@ -55,6 +55,19 @@ jobs:
           p.write_text(s.replace("Android 5.3 Test • four languages", "Android 5.5 • Speak & Replay"))
           PY
 
+      - name: Apply Android 5.6 voice repair
+        run: python3 scripts/apply_audio_56.py
+
+      - name: Verify phone audio repair assets
+        shell: bash
+        run: |
+          grep -q 'id="phoneSoundCheck"' app/src/main/assets/index.html
+          grep -q 'id="phoneVoiceCheck"' app/src/main/assets/index.html
+          grep -q 'id="phoneVoiceSettings"' app/src/main/assets/index.html
+          grep -q 'versionCode 56' app/build.gradle
+          grep -q 'android.intent.action.TTS_SERVICE' app/src/main/AndroidManifest.xml
+          grep -q 'initializeSpeechEngine' app/src/main/java/com/polyglot/speakingacademy/MainActivity.java
+
       - name: Validate speaking UI patch
         run: |
           grep -q 'id="voiceRecStart"' app/src/main/assets/index.html
