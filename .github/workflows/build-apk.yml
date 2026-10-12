@@ -77,6 +77,65 @@ jobs:
           grep -q 'id="recStart"' app/src/main/assets/index.html
           grep -q "versionCode 56" app/build.gradle
 
+      - name: Add beginner building blocks to all four languages
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/foundations_57.js
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("app/src/main/assets/index.html")
+          html=p.read_text(encoding="utf-8")
+          js=Path("assets/foundations_57.js").read_text(encoding="utf-8")
+          assert "const FOUNDATION_UNITS=" in js and "foundationInstallUI();" in js
+          assert "</body>" in html
+          assert "Polyglot Academy 5.7" not in html
+          html=html.replace("</body>","<script>\n"+js+"\n</script></body>",1)
+          html=html.replace("Android 5.5 • Speak & Replay","Android 5.7 • Beginner Foundations")
+          p.write_text(html,encoding="utf-8")
+          gradle=Path("app/build.gradle")
+          g=gradle.read_text()
+          assert "versionCode 56" in g
+          g=g.replace("versionCode 56","versionCode 57").replace("versionName '5.6-android'","versionName '5.7-android'")
+          gradle.write_text(g)
+          manifest=Path("app/src/main/AndroidManifest.xml")
+          m=manifest.read_text()
+          m=m.replace('android:label="Polyglot Academy 5.5"','android:label="Polyglot Academy 5.7"')
+          manifest.write_text(m)
+          PY
+
+      - name: Validate foundation lessons and progress
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'versionCode 57' app/build.gradle
+          grep -q 'Android 5.7 • Beginner Foundations' app/src/main/assets/index.html
+          grep -q 'const FOUNDATION_UNITS=' app/src/main/assets/index.html
+          grep -q 'foundationHomeGo' app/src/main/assets/index.html
+          node - <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const js=fs.readFileSync('assets/foundations_57.js','utf8');
+          const start=js.indexOf('const FOUNDATION_UNITS='), end=js.indexOf('const foundationCounts=');
+          if(start<0||end<=start)throw Error('Foundations missing');
+          const ctx={};vm.runInNewContext(js.slice(start,end)+'\nthis.data=FOUNDATION_UNITS;',ctx);
+          let total=0;
+          for(const [lang,minUnits] of [['ceb',5],['ko',6],['zh',6],['ja',6]]){
+            const units=ctx.data[lang];if(units.length!==minUnits)throw Error(lang+' unit count');
+            for(const unit of units){
+              const forms=new Set();
+              if(unit.items.length<8)throw Error('Too few items in '+lang+' '+unit.id);
+              for(const card of unit.items){
+                if(card.length<6||!card[0]||!card[2]||!card[5])throw Error('Invalid card '+lang+' '+unit.id);
+                if(forms.has(card[0]))throw Error('Duplicate quiz option '+lang+' '+unit.id+': '+card[0]);
+                forms.add(card[0]);total++;
+              }
+            }
+            console.log(lang,units.length,'foundation chapters');
+          }
+          if(total<240)throw Error('Foundation deck unexpectedly short');
+          console.log('Validated '+total+' foundation cards');
+          NODE
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
