@@ -98,6 +98,8 @@ jobs:
           gradle=Path("app/build.gradle")
           g=gradle.read_text()
           assert "versionCode 56" in g
+          assert "applicationId 'com.polyglot.speakingacademy.voice'" in g
+          g=g.replace("applicationId 'com.polyglot.speakingacademy.voice'","applicationId 'com.polyglot.speakingacademy.foundations'")
           g=g.replace("versionCode 56","versionCode 57").replace("versionName '5.6-android'","versionName '5.7-android'")
           gradle.write_text(g)
           manifest=Path("app/src/main/AndroidManifest.xml")
