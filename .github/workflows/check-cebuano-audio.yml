@@ -1,0 +1,26 @@
+name: Check public Cebuano audio source
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/check-cebuano-audio.yml']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Commons metadata endpoints
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from urllib.request import Request, urlopen
+          from urllib.parse import urlencode
+          import json
+          for term in ['Kumusta','Maayong buntag','Salamat']:
+              query={'action':'query','format':'json','formatversion':'2','generator':'search','gsrnamespace':'6','gsrlimit':'35','gsrsearch':f'intitle:"{term}" "(ceb)"','prop':'imageinfo','iiprop':'url|size|extmetadata','maxlag':'5'}
+              url='https://commons.wikimedia.org/w/api.php?'+urlencode(query)
+              try:
+                  req=Request(url,headers={'User-Agent':'PolyglotAcademyAndroid/5.6 (https://commons.wikimedia.org/wiki/Commons:API; educational app)','Accept':'application/json'})
+                  with urlopen(req,timeout=15) as h: data=json.load(h)
+                  pages=data.get('query',{}).get('pages',[])
+                  print(term, 'found',len(pages),[p.get('title','') for p in pages[:5]])
+              except Exception as e: print(term,'ERROR',type(e).__name__,str(e)[:200])
+          PY
