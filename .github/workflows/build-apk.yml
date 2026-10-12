@@ -92,7 +92,7 @@ jobs:
           assert "Polyglot Academy 5.7" not in html
           html=html.replace("</body>","<script>\n"+js+"\n</script></body>",1)
           import re
-          html,n=re.subn(r'(<span class="pill">)Android 5\\.[^<]*(</span>)',r'\\g<1>Android 5.7 • Beginner Foundations\\g<2>',html,count=1)
+          html,n=re.subn(r'(<span class="pill">)Android 5\.[^<]*(</span>)',r'\g<1>Android 5.7 • Beginner Foundations\g<2>',html,count=1)
           assert n==1, "Could not update the Android header version"
           p.write_text(html,encoding="utf-8")
           gradle=Path("app/build.gradle")
