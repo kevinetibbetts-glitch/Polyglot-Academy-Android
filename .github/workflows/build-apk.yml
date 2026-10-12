@@ -36,6 +36,25 @@ jobs:
       - name: Apply tested Android 5.5 speaking controls
         run: python3 scripts/apply_voice_55.py
 
+      - name: Keep existing 5.4 installation and progress untouched
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle")
+          s = p.read_text()
+          assert "applicationId 'com.polyglot.speakingacademy'" in s
+          p.write_text(s.replace("applicationId 'com.polyglot.speakingacademy'", "applicationId 'com.polyglot.speakingacademy.voice'"))
+          p = Path("app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          assert 'android:label="Polyglot Academy"' in s
+          p.write_text(s.replace('android:label="Polyglot Academy"', 'android:label="Polyglot Academy 5.5"'))
+          p = Path("app/src/main/assets/index.html")
+          s = p.read_text()
+          assert "Android 5.3 Test • four languages" in s
+          p.write_text(s.replace("Android 5.3 Test • four languages", "Android 5.5 • Speak & Replay"))
+          PY
+
       - name: Validate speaking UI patch
         run: |
           grep -q 'id="voiceRecStart"' app/src/main/assets/index.html
