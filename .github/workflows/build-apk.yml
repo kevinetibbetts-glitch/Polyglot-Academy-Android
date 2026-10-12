@@ -33,6 +33,15 @@ jobs:
           test -s app/src/main/java/com/polyglot/speakingacademy/MainActivity.java
           test -s app/src/main/AndroidManifest.xml
 
+      - name: Apply tested Android 5.5 speaking controls
+        run: python3 scripts/apply_voice_55.py
+
+      - name: Validate speaking UI patch
+        run: |
+          grep -q 'id="voiceRecStart"' app/src/main/assets/index.html
+          grep -q 'id="recStart"' app/src/main/assets/index.html
+          grep -q "versionCode 55" app/build.gradle
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
